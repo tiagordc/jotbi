@@ -1,4 +1,3 @@
-import { Utils } from './utils'
 import { Dashboard, IDashboard } from './dashboard'
 import Cookies from 'js-cookie'
 import 'core-js/fn/promise'
@@ -8,107 +7,166 @@ export class Prompts {
   //https://community.oracle.com/thread/3730170
   //http://obi2ru.blogspot.com/2013/02/biee11g-set-presentation-variable-by-javascript.html
 
-  private static GetPromptManager(): Promise<IPromptManager> {
-    return new Promise((resolve, reject) => {
-      const win = <any>window
-      const pm = <IPromptManager>win.PromptManager
-      if (typeof pm !== 'undefined') {
-        resolve(pm)
-      } else {
-        console.error('Not running under OTBI')
-        reject()
-      }
-    })
-  }
-
+  /**
+   * Get prompt by display caption
+   * @param caption prompt caption
+   */
   public static GetByCaption(caption: string): Promise<IPrompt> {
-    return this.GetPromptManager().then(pm => {
-      const collections = pm.getPromptManager().getAllPromptCollectionJSON()
+    return new Promise((resolve, reject) => {
+      try {
+        const collections = window.PromptManager.getPromptManager().getAllPromptCollectionJSON()
 
-      for (let i = 0; i < collections.length; i++) {
-        const c = collections[i]
-        for (let j = 0; j < c.promptSteps.length; j++) {
-          const pstep = c.promptSteps[j]
-          for (let k = 0; k < pstep.prompts.length; k++) {
-            const p = pstep.prompts[k]
-            if (p.caption === caption) {
-              p.viewStatePath = c.viewStatePath
-              return Promise.resolve(p)
+        for (let i = 0; i < collections.length; i++) {
+          const c = collections[i]
+          for (let j = 0; j < c.promptSteps.length; j++) {
+            const pstep = c.promptSteps[j]
+            for (let k = 0; k < pstep.prompts.length; k++) {
+              const p = pstep.prompts[k]
+              if (p.caption === caption) {
+                p.viewStatePath = c.viewStatePath
+                resolve(p)
+                return
+              }
             }
           }
         }
-      }
 
-      return Promise.reject(null)
+        reject()
+      } catch (e) {
+        reject(e)
+      }
     })
   }
 
+  /**
+   * Get all prompts of a given typen
+   * @param promptType type of filter, example: columnFilterPrompt
+   * @param controlType ui control, example: dropDown
+   */
   public static GetByType(promptType: string, controlType: string): Promise<IPrompt[]> {
-    return this.GetPromptManager().then(pm => {
-      const collections = pm.getPromptManager().getAllPromptCollectionJSON()
-      let result: IPrompt[] = []
+    return new Promise((resolve, reject) => {
+      try {
+        const collections = window.PromptManager.getPromptManager().getAllPromptCollectionJSON()
+        let result: IPrompt[] = []
 
-      for (let i = 0; i < collections.length; i++) {
-        const c = collections[i]
-        for (let j = 0; j < c.promptSteps.length; j++) {
-          const pstep = c.promptSteps[j]
-          for (let k = 0; k < pstep.prompts.length; k++) {
-            const p = pstep.prompts[k]
-            if (p.promptType === promptType && p.uiControlType === controlType) {
+        for (let i = 0; i < collections.length; i++) {
+          const c = collections[i]
+          for (let j = 0; j < c.promptSteps.length; j++) {
+            const pstep = c.promptSteps[j]
+            for (let k = 0; k < pstep.prompts.length; k++) {
+              const p = pstep.prompts[k]
+              if (p.promptType === promptType && p.uiControlType === controlType) {
+                p.viewStatePath = c.viewStatePath
+                result.push(p)
+              }
+            }
+          }
+        }
+
+        return resolve(result)
+      } catch (e) {
+        reject(e)
+      }
+    })
+  }
+
+  /**
+   * Get all page prompts
+   */
+  public static GetAll(): Promise<IPrompt[]> {
+    return new Promise((resolve, reject) => {
+      try {
+        const collections = window.PromptManager.getPromptManager().getAllPromptCollectionJSON()
+        let result: IPrompt[] = []
+
+        for (let i = 0; i < collections.length; i++) {
+          const c = collections[i]
+          for (let j = 0; j < c.promptSteps.length; j++) {
+            const pstep = c.promptSteps[j]
+            for (let k = 0; k < pstep.prompts.length; k++) {
+              const p = pstep.prompts[k]
               p.viewStatePath = c.viewStatePath
               result.push(p)
             }
           }
         }
-      }
 
-      return Promise.resolve(result)
+        return resolve(result)
+      } catch (e) {
+        reject(e)
+      }
     })
   }
 
-  public static SetPrompt(caption: string, value: any, update: boolean): void {
-    let promises: Promise<any>[] = []
-    promises.push(this.GetPromptManager())
-    promises.push(this.GetByCaption(caption))
+  /**
+   * Set prompt value
+   * @param caption prompt display caption
+   * @param values list of values
+   * @param update true if refresh the page after setting the prompt value
+   */
+  public static SetPrompt(caption: string, values: IPromptValue[], update: boolean): void {
+    this.GetByCaption(caption).then(prompt => {
+      let promptValues = []
 
-    let pm: IPromptManager
-    let pInfo: IPrompt
+      //get array of obiprp.PromptComponents.PromptValue objects
+      for (let i = 0; i < values.length; i++) {
+        let val = values[i]
+        var current = new window.obiprp.PromptComponents.PromptValue(
+          val.caption,
+          val.codeValue,
+          val.eType
+        )
+        //let current = eval(`new obiprp.PromptComponents.PromptValue("${val.caption}", "${val.codeValue}", ${val.eType})`);
+        promptValues.push(current)
+      }
 
-    Promise.all(promises)
-      .then(result => {
-        pm = <IPromptManager>result[0]
-        pInfo = <IPrompt>result[1]
+      const action = update ? window.PromptManager.FINISH_ACTION : window.PromptManager.NEXT_ACTION
+      const pm = window.PromptManager.getPromptManager()
+      const h = pm.getPromptCollectionInfoWithViewID(prompt.viewStatePath)
+      const d = pm.getIndividualPrompt(h.sPromptCollectionID, prompt.promptStreamID)
 
-        let expression =
-          "<sawx:expr xmlns:sawx='com.siebel.analytics.web/expression/v1.1' xsi:type='sawx:list' op='_OP_' emptyAsAllChoices='true' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'><sawx:expr xsi:type='sawx:sqlExpression'>_COLFORMULA_</sawx:expr><sawx:expr xsi:type='xsd:string'>_VAL_</sawx:expr></sawx:expr>"
-        expression = expression
-          .replace('_COLFORMULA_', pInfo.dataType.displayColumnFormula)
-          .replace('_VAL_', value)
-          .replace('_OP_', pInfo.operator)
+      let a = {
+        oLayoutItemJSON: pm.getIndividualPromptJSON(h.sPromptCollectionID, prompt.promptStreamID),
+        promptValues: promptValues, //d.getValues(),
+        promptOp: d.getOperator(),
+        bEnterByCodeValue: d.isEnterByCodeValue(),
+        bFilterByCodeValue: false
+      }
 
-        return Utils.GetXML(expression)
-      })
-      .then(v => {
-        if (pInfo.viewStatePath) {
-          const action = update ? pm.FINISH_ACTION : pm.NEXT_ACTION
-          pm.submitPrompt(pInfo.viewStatePath, update, action, v)
-        }
-      })
+      if (a.oLayoutItemJSON && a.oLayoutItemJSON.dataType) {
+        a.bFilterByCodeValue = a.oLayoutItemJSON.dataType.isDoubleColumnInput
+      }
+
+      let xml = window.buildPromptCollectionFilterGivenPromptValues(
+        h.sPromptCollectionID,
+        prompt.promptStreamID,
+        a
+      )
+
+      //code from h.getAllPromptExprsArray()
+      let array: any = {}
+      array[prompt.promptStreamID] = xml
+      window.PromptManager.buildPromptExprGivenExpr(' ', array) //will change xml namespaces
+      window.PromptManager.submitPrompt(prompt.viewStatePath, update, action, xml)
+    })
   }
 
+  /**
+   * Save all prompts to cookie
+   */
   public static SaveAll(): void {
     let promises: Promise<any>[] = []
     promises.push(Dashboard.GetCurrent())
-    promises.push(this.GetByType('columnFilterPrompt', 'dropDown'))
+    promises.push(this.GetAll())
 
     Promise.all(promises).then(result => {
       let dashboard = <IDashboard>result[0]
-      let dropdowns = <IPrompt[]>result[1]
+      let prompts = <IPrompt[]>result[1]
       let saveFilters: any = {}
 
-      //Handle dropdowns
-      for (let i = 0; i < dropdowns.length; i++) {
-        let current = dropdowns[i]
+      for (let i = 0; i < prompts.length; i++) {
+        let current = prompts[i]
+        if (current.uiControlType === 'calendar') continue
         if (
           current.currentValues &&
           current.currentValues.values &&
@@ -118,11 +176,7 @@ export class Prompts {
           for (let j = 0; j < current.currentValues.values.length; j++) {
             let value = current.currentValues.values[j]
             if (value.caption && value.codeValue && value.codeValue !== '*)nqgtac(*') {
-              currentFilter.push({
-                caption: value.caption,
-                code: value.codeValue,
-                controlType: 'dropDown'
-              })
+              currentFilter.push(value)
             }
           }
           if (currentFilter.length > 0) {
@@ -135,6 +189,9 @@ export class Prompts {
     })
   }
 
+  /**
+   * Load all prompts from cookie
+   */
   public static LoadAll(): void {
     Dashboard.GetCurrent().then(dashboard => {
       let savedFilters = Cookies.getJSON(dashboard.FriendlyName)
@@ -143,38 +200,10 @@ export class Prompts {
       for (let i = 0; i < keys.length; i++) {
         const refresh = i === keys.length - 1
         const key = keys[i]
-        const values = savedFilters[key]
-        let value = ''
-
-        for (let j = 0; j < values.length; j++) {
-          if (j > 0) value += ';'
-          value += values[j].caption
-        }
-
-        this.SetPrompt(key, value, refresh)
+        this.SetPrompt(key, savedFilters[key], refresh)
       }
     })
   }
-}
-
-export interface IPromptManager {
-  FINISH_ACTION: string
-  NEXT_ACTION: string
-  submitPrompt(path: string, update: boolean, action: string, xml: any): void
-  getPromptManager(): IPromptManagerInstance
-}
-
-export interface IPromptManagerInstance {
-  getAllPromptCollectionJSON(): IPromptCollection[]
-}
-
-export interface IPromptCollection {
-  promptSteps: IPromptStep[]
-  viewStatePath: string
-}
-
-export interface IPromptStep {
-  prompts: IPrompt[]
 }
 
 export interface IPrompt {
@@ -184,12 +213,15 @@ export interface IPrompt {
   operator: string
   dataType: IPromptDataType
   currentValues: IPromptCurrentValue
-
-  viewStatePath?: string
+  promptStreamID: string
+  viewStatePath: string //doesn't acttually exist
 }
 
 export interface IPromptDataType {
   displayColumnFormula: string
+  codeColumnFormula: string
+  codeColumnPrimaryType: string
+  isDoubleColumnInput: boolean
 }
 
 export interface IPromptCurrentValue {
@@ -199,4 +231,5 @@ export interface IPromptCurrentValue {
 export interface IPromptValue {
   caption: string
   codeValue: any
+  eType: number
 }

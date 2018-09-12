@@ -4,10 +4,12 @@
 export {}
 
 declare global {
-  interface Window {
-    obips: any
-    obiprp: any
-    PromptManager: any
-    buildPromptCollectionFilterGivenPromptValues: (n: any, a: any, B: any) => any
-  }
+    
+    interface Window {
+         obips: any;
+         obiprp: any;
+         PromptManager: any;
+         buildPromptCollectionFilterGivenPromptValues: (n: any, a: any, B: any) => any;
+    }
+
 }

@@ -6,7 +6,8 @@ Javascript helper functions  and events to Oracle Transactional Business Intelli
     - Oracle Sales Cloud Release 13
 
  - Events:
-    - Report object created or updated
+    - Report button clicked
+    - Object created or updated
     - Ajax request completed
 
  - Dashboard:
@@ -18,6 +19,8 @@ Javascript helper functions  and events to Oracle Transactional Business Intelli
     - Load saved prompts
 
  - Future:
+    - Handle OTBI errors
+    - Go to page function
     - New prompt components
     - New table component
     - Graphs and charts 

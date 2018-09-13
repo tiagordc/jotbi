@@ -27,6 +27,39 @@ export class Events {
 
     }
 
+    public static OnButtonClick(callback: ((button: string, a: MouseEvent) => boolean)): void {
+
+        const win = <any>window;
+
+        if (typeof win.__ButtonCallbacks === 'undefined') {
+
+            win.__ButtonCallbacks = [];
+            win.__ButtonCallbacks.push(callback);
+            win.__ButtonHandler = win.obips.FormFields.Button.clickHandler;
+
+            win.obips.FormFields.Button.clickHandler = function (a: any) {
+
+                let text = null;
+                try { text = a.currentTarget.value; }
+                catch (e) {}
+
+                for (let i = 0; i < win.__ButtonCallbacks.length; i++) {
+                    let cb = win.__ButtonCallbacks[i];
+                    let cbResult = cb(text, a);
+                    if (cbResult === false) return;
+                }
+
+                win.__ButtonHandler(a);
+
+            };
+
+        }
+        else if (win.__ButtonCallbacks.indexOf(callback) === -1) {
+            win.__ButtonCallbacks.push(callback);
+        }
+
+    }
+
     public static OnViewModel(callback: ((id: string, report: any, reload: boolean) => void)): void {
 
         const win = <any>window;

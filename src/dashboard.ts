@@ -1,4 +1,6 @@
 import { Utils } from './utils';
+import { Events } from './events';
+import { Prompts } from './prompts';
 import 'core-js/fn/promise';
 
 export class Dashboard {
@@ -77,6 +79,50 @@ export class Dashboard {
             window.setTimeout(function () { elem.style.height = (scrollingHeader.scrollHeight + 100) + 'px'; }, 50);
             
 		}
+    }
+
+    public static StandardReport(scriptId: string, saveFilters: boolean): void {
+
+        const win = <any>window;
+
+        Events.OnViewModel((id, report, reload) => {
+
+            if (report instanceof win.obips.ScrollingPivotTable) {
+                
+                this.FitToWindow(report);
+
+                if (saveFilters) {
+
+                    if (!win.__PromptsLoaded) {
+                        window.setTimeout(function() {
+                            Prompts.LoadAll();
+                            win.__PromptsLoaded = true;
+                        }, 100);
+                    }
+                    
+                    if (win.__Apply === true) {
+                        delete win.__Apply;
+                        Prompts.SaveAll();
+                    }
+
+                }
+
+            }
+
+        });
+
+        Events.OnButtonClick((name, ev) => {
+            if (name === 'Apply') win.__Apply = true;
+            return true;
+        });
+
+        if (typeof scriptId === 'string') {
+            let scriptElem: any = document.getElementById(scriptId);
+            if (typeof scriptElem === 'object') {
+                scriptElem.closest('div.SectionDiv').style.display = 'none';
+            }
+        }
+        
     }
 
 }

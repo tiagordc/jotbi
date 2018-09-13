@@ -1,26 +1,30 @@
-# Javascript OTBI helper
+# Javascript OTBI wrapper
 
-Wrapper functions to work in Oracle Sales Cloud BI 
+Javascript helper functions  and events to Oracle Transactional Business Intelligence (OTBI)
 
-Based on https://github.com/alexjoverm/typescript-library-starter
+ - Tested on:
+    - Oracle Sales Cloud Release 13
+
+ - Events:
+    - Report object created or updated
+    - Ajax request completed
+
+ - Dashboard:
+    - Fix iframe horizontal and vertical double scroll
+
+ - Promps:
+    - Get prompts by type or by caption
+    - Save prompts to cookies
+    - Load saved prompts
+
+ - Future:
+    - New prompt components
+    - New table component
+    - Graphs and charts 
+
+Boilerplate: https://github.com/alexjoverm/typescript-library-starter
 
 ### NPM scripts
 
- - `npm t`: Run test suite
  - `npm start`: Run `npm run build` in watch mode
-
-### TODO: look into:
-
-
-obips.ScrollingPivotTable.ensureClientStateUpdatedOnLoad
-
-
-obips.Analysis.resetReport('d:dashboard~p:97du68hm8d356p4p~r:6s70vae4iqk3p60t');
-obips.ViewModelBase.getViewInstanceCache("saw_162550_19")
-document.body.saw_162550_19 = new obips.ScrollingPivotTable
-obips.ResourceManager.getSingleton()
-obips.views.ClientStateManager
-
-
-
-
+ - `npm t`: Run tests - future release

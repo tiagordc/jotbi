@@ -21,10 +21,8 @@ export class Events {
             };
 
         }
-        else {
-            if (win.__HttpCallbacks.indexOf(callback) === -1) {
-                win.__HttpCallbacks.push(callback);
-            }
+        else if (win.__HttpCallbacks.indexOf(callback) === -1) {
+            win.__HttpCallbacks.push(callback);
         }
 
     }
@@ -63,6 +61,9 @@ export class Events {
 
             };
 
+        }
+        else if (win.__ViewModelCallbacks.indexOf(callback) === -1) {
+            win.__ViewModelCallbacks.push(callback);
         }
 
     }

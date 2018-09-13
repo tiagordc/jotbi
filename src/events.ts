@@ -36,11 +36,12 @@ export class Events {
             win.__ButtonCallbacks = [];
             win.__ButtonCallbacks.push(callback);
             win.__ButtonHandler = win.obips.FormFields.Button.clickHandler;
+            win.__ContextHandler = win.obips.ContextMenu.Controller.prototype.clickContextMenuOptionHandler;
 
             win.obips.FormFields.Button.clickHandler = function (a: any) {
 
                 let text = null;
-                try { text = a.currentTarget.value; }
+                try { text = a.currentTarget.value.trim(); }
                 catch (e) {}
 
                 for (let i = 0; i < win.__ButtonCallbacks.length; i++) {
@@ -51,6 +52,22 @@ export class Events {
 
                 win.__ButtonHandler(a);
 
+            };
+
+            win.obips.ContextMenu.Controller.prototype.clickContextMenuOptionHandler = function(a: any) {
+                
+                let text = null;
+                try { text = a.currentTarget.innerText.trim(); }
+                catch (e) {}
+
+                for (let i = 0; i < win.__ButtonCallbacks.length; i++) {
+                    let cb = win.__ButtonCallbacks[i];
+                    let cbResult = cb(text, a);
+                    if (cbResult === false) return;
+                }
+
+                win.__ContextHandler(a);
+                
             };
 
         }

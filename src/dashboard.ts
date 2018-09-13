@@ -1,6 +1,7 @@
 import { Utils } from './utils';
 import { Events } from './events';
 import { Prompts } from './prompts';
+
 import 'core-js/fn/promise';
 
 export class Dashboard {
@@ -100,8 +101,8 @@ export class Dashboard {
                         }, 100);
                     }
                     
-                    if (win.__Apply === true) {
-                        delete win.__Apply;
+                    if (win.__PromptChange === true) {
+                        delete win.__PromptChange;
                         Prompts.SaveAll();
                     }
 
@@ -112,7 +113,7 @@ export class Dashboard {
         });
 
         Events.OnButtonClick((name, ev) => {
-            if (name === 'Apply') win.__Apply = true;
+            if (name === 'Apply') win.__PromptChange = true;
             return true;
         });
 
@@ -122,6 +123,18 @@ export class Dashboard {
                 scriptElem.closest('div.SectionDiv').style.display = 'none';
             }
         }
+
+        // window.onerror = () => {
+        //     const contentArea = window.frameElement.closest('div.p_AFStartTabs');
+        //     if (contentArea) {
+        //         const parentDoc = window.parent.document;
+        //         const toastr = parentDoc.createElement("div");
+        //         const message = parentDoc.createTextNode("Something went wrong. Please refresh your browser!"); 
+        //         toastr.setAttribute("style", "position: absolute; top: 10px; right: 15px; padding: 15px; border-radius: 3px; box-shadow: 0 0 12px #999; color: #fff; opacity: .8; background-color: #bd362f;");
+        //         toastr.appendChild(message);  
+        //         contentArea.appendChild(toastr);  
+        //     }
+        // };
         
     }
 
@@ -134,4 +147,3 @@ export interface IDashboard {
     Page: string;
     FriendlyName: string;
 }
-
